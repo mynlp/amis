@@ -1,0 +1,23 @@
+Number of activated features varies in differenc events.  The results
+will be different between GIS and IIS.
+
+p( x | y, z )
+
+feature 1	0, 0, _
+feature 2	1, 0, _
+feature 3	0, 1, _
+feature 4	1, 1, _
+feature 5	0, _, 0
+feature 6	1, _, 0
+
+0, 0, 0
+0, 0, 0
+1, 0, 0
+0, 1, 0
+0, 1, 1
+0, 0, 1
+1, 0, 1
+1, 1, 1
+1, 1, 1
+1, 1, 1
+

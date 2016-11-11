@@ -1,0 +1,12 @@
+N V A
+events     N f_events_N     V f_events_V     A f_events_A
+parameter  N f_parameter_N  V f_parameter_V  A f_parameter_A
+goes       N f_goes_N       V f_goes_V       A f_goes_A
+killed     N f_killed_N     V f_killed_V     A f_killed_A
+green      N f_green_N      V f_green_V      A f_green_A      
+faster     N f_faster_N     V f_faster_V     A f_faster_A
+-s         N f_-s_N         V f_-s_V         A f_-s_A
+-ed        N f_-ed_N        V f_-ed_V        A f_-ed_A
+-er        N f_-er_N        V f_-er_V        A f_-er_A
+longer-5   N f_longer-5_N   V f_longer-5_V   A f_longer-5_A
+shorter-6  N f_shorter-6_N  V f_shorter-6_V  A f_shorter-6_A

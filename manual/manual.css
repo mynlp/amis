@@ -1,0 +1,72 @@
+body {
+  color: black;
+  background-color: white;
+  margin: 5% 5% 5% 5%
+}
+
+h1 {
+  font: bold 200% sans-serif;
+  color: black;
+  border: #ff5050;
+  border-style: solid;
+  border-width: 0pt 0pt 10pt 0pt;
+  padding: 0pt 0pt 0pt 5pt;
+  margin: 5% 15% 5% 15%;
+}
+
+h2 {
+  font: bold 200% sans-serif;
+  color: black;
+  border: #ff7070;
+  border-style: solid;
+  border-width: 0pt 0pt 7pt 0pt;
+  padding: 0pt 0pt 0pt 5pt;
+  margin: 5% 10% 5% 10%;
+}
+
+h3 {
+  font: bold 200% sans-serif;
+  color: black;
+  border: #ff9090;
+  border-style: solid;
+  border-width: 0pt 0pt 5pt 0pt;
+  padding: 0pt 0pt 0pt 5pt;
+  margin: 5% 6% 5% 6%;
+}
+
+h4 {
+  font: bold 200% sans-serif;
+  color: black;
+  border: #ffb0b0;
+  border-style: solid;
+  border-width: 0pt 0pt 3pt 0pt;
+  padding: 0pt 0pt 0pt 5pt;
+  margin: 5% 4% 5% 4%;
+}
+
+table {
+  background-color: #ffc0c0;
+}
+
+pre {
+  font-size: 120%;
+  background-color: #ffffee;
+  border-width: 1pt 1pt 1pt 1pt;
+  border-style: solid;
+  width: 90%;
+  overflow: auto;
+}
+
+hr {
+  color: red;
+}
+
+.author {
+  font-style: italic;
+  text-align: right;
+}
+
+.math {
+  font-style: italic;
+}
+

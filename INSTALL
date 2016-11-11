@@ -1,0 +1,22 @@
+To install amis:
+
+./configure
+make
+make install
+
+This will install amis in /usr/local/bin/.
+
+If you want to install it in another directory:
+
+./configure --prefix=XXX
+make
+make install
+
+This will install amis in XXX/bin/.
+
+If you cannot find "configure" script, run the following command first:
+
+aclocal; autoheader; automake --add-missing --foreign; autoconf
+
+Then, follow the above instructions.
+

@@ -1,0 +1,254 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(src/amis.cc)
+AM_CONFIG_HEADER(include/amis/config_amis.h)
+AM_INIT_AUTOMAKE(amis, 4.9.1, true)
+AC_DEFINE_UNQUOTED(AMIS_PACKAGE, "$PACKAGE", [Name of package])
+AC_DEFINE_UNQUOTED(AMIS_VERSION, "$VERSION", [Version number of package])
+AC_LANG_CPLUSPLUS
+
+
+
+dnl Checks for programs.
+AC_PROG_CXX
+AC_PROG_RANLIB
+AC_PROG_AWK
+AC_PROG_INSTALL
+AC_PROG_LN_S
+
+AC_SUBST(AM_CXXFLAGS)
+AM_CXXFLAGS=""
+
+CXXFLAGS_TMP="$CXXFLAGS"
+
+CXXFLAGS=-fstrict-aliasing
+AC_CACHE_CHECK(whether $CXX accepts $CXXFLAGS,
+	amis_cv_prog_cxx_strict_aliasing,
+[AC_TRY_COMPILE([#include <iostream>],[{ std::cout << "hello, world"; }], 
+amis_cv_prog_cxx_strict_aliasing=yes, amis_cv_prog_cxx_strict_aliasing=no)])
+if test "$amis_cv_prog_cxx_strict_aliasing" = yes; then
+  AM_CXXFLAGS="$AM_CXXFLAGS $CXXFLAGS"
+fi
+
+CXXFLAGS=-fomit-frame-pointer
+AC_CACHE_CHECK(whether $CXX accepts $CXXFLAGS,
+	amis_cv_prog_cxx_omit_frame_pointer,
+[AC_TRY_COMPILE([#include <iostream>],[{ std::cout << "hello, world"; }], 
+amis_cv_prog_cxx_omit_frame_pointer=yes, amis_cv_prog_cxx_omit_frame_pointer=no)])
+if test "$amis_cv_prog_cxx_omit_frame_pointer" = yes; then
+  AM_CXXFLAGS="$AM_CXXFLAGS $CXXFLAGS"
+fi
+
+CXXFLAGS="-Wall"
+AC_CACHE_CHECK(whether $CXX accepts $CXXFLAGS,
+	amis_cv_prog_cxx_wall,
+[AC_TRY_COMPILE([#include <iostream>],[{ std::cout << "hello, world"; }], 
+amis_cv_prog_cxx_wall=yes, amis_cv_prog_cxx_wall=no)])
+if test "$amis_cv_prog_cxx_wall" = yes; then
+  AM_CXXFLAGS="$AM_CXXFLAGS $CXXFLAGS"
+fi
+
+CXXFLAGS="$CXXFLAGS_TMP"
+
+
+dnl Checks for libraries.
+AC_CHECK_LIB(bz2, BZ2_bzDecompress)
+AC_CHECK_LIB(z, gzopen)
+
+
+
+dnl Checks for header files.
+AC_CHECK_HEADERS(sys/time.h sys/resource.h unistd.h ieeefp.h sstream hash_map ext/hash_map tr1/unordered_map ext/pool_allocator.h limits pthread.h thread.h bzlib.h zlib.h windows.h)
+
+
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+
+
+dnl Checks for library functions.
+dnl AC_FUNC_STRTOD
+AC_CHECK_FUNCS(gettimeofday getrusage)
+
+
+
+AC_ARG_WITH(arch, [ --with-arch	use "-march" option for compilation [default no]],, with_arch=no)
+AC_MSG_CHECKING(whether to use "-march" option)
+if test "$with_arch" != "no"; then
+  AC_MSG_RESULT($with_arch)
+  AM_CXXFLAGS="$AM_CXXFLAGS -march=$with_arch"
+else
+  AC_MSG_RESULT(no)
+fi
+
+
+
+AC_ARG_ENABLE(debug, [ --enable-debug		enable debugging (no or 0-5) [default no]],, enable_debug=no)
+AC_MSG_CHECKING(whether to enable debugging)
+if test "$enable_debug" = "no"; then
+  AC_MSG_RESULT(no)
+elif test 0 -le $enable_debug -a $enable_debug -le 5; then
+  AC_MSG_RESULT($enable_debug)
+  AC_DEFINE_UNQUOTED(AMIS_DEBUG_LEVEL, $enable_debug, [Degree of debugging messages])
+else
+  AC_MSG_RESULT($enable_debug)
+  AC_WARN(debugging level is invalid)
+fi
+
+AC_ARG_ENABLE(assert, [ --enable-assert	enable assert [default no]],, enable_assert=no)
+AC_MSG_CHECKING(whether to enable assert)
+if test "$enable_assert" = "no"; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(NDEBUG, 1, [disable assertion])
+else
+    AC_MSG_RESULT(yes)
+fi
+
+
+AC_ARG_ENABLE(profile, [ --enable-profile	enable profiling (no or 0-5) [default no]],, enable_profile=no)
+AC_MSG_CHECKING(whether to enable profiling)
+if test "$enable_profile" = "no"; then
+  AC_MSG_RESULT(no)
+elif test 0 -le $enable_profile -a $enable_profile -le 5; then
+  if test "$ac_cv_header_sstream" = yes; then
+    if test "$ac_cv_header_sys_time_h" = yes; then
+      AC_MSG_RESULT($enable_profile)
+      AC_DEFINE_UNQUOTED(AMIS_PROFILE_LEVEL, $enable_profile, [Degree of profiling level])
+    else
+      AC_MSG_RESULT(no)
+      AC_WARN(profiling is invalid without "sys/time.h")
+    fi
+  else
+    AC_MSG_RESULT(no)
+    AC_WARN(profiling is invalid without "sstream")
+  fi
+else
+  AC_MSG_RESULT(no)
+  AC_WARN(profiling level is invalid)
+fi
+
+
+
+AC_ARG_ENABLE(bzlib, [ --enable-bzlib		enable bzlib functions [default yes]],, enable_bzlib=yes)
+AC_MSG_CHECKING(whether to enable bzlib functions)
+if test "$enable_bzlib" = "yes"; then
+  AC_MSG_RESULT(yes)
+  if test "$ac_cv_lib_bz2_BZ2_bzDecompress" = "yes"; then
+    if test "$ac_cv_header_bzlib_h" = yes; then
+      AC_DEFINE(AMIS_BZLIB, 1, [Enabling bzlib functions])
+    else
+      AC_WARN(bzlib.h (bzlib library) is required to enable bzlib functions)
+      AMIS_BZLIB=no
+    fi
+  else
+    AC_WARN(bzlib library is required to enable bzlib functions)
+    AMIS_BZLIB=no
+  fi
+else
+  AC_MSG_RESULT(no)
+  AMIS_BZLIB=no
+fi
+
+
+
+AC_ARG_ENABLE(zlib, [ --enable-zlib		enable zlib functions [default yes]],, enable_zlib=yes)
+AC_MSG_CHECKING(whether to enable zlib functions)
+if test "$enable_zlib" = "yes"; then
+  AC_MSG_RESULT(yes)
+  if test "$ac_cv_lib_z_gzopen" = "yes"; then
+    if test "$ac_cv_header_zlib_h" = yes; then
+      AC_DEFINE(AMIS_ZLIB, 1, [Enabling zlib functions])
+      dnl if test "$ac_cv_header_zutil_h" = yes; then
+      dnl   AC_DEFINE(AMIS_ZLIB, 1, [Enabling zlib functions])
+      dnl else
+      dnl   AC_WARN(zutil.h (zlib library) is required to enable zlib functions)
+      dnl   AMIS_ZLIB=no
+      dnl fi
+    else
+      AC_WARN(zlib.h (zlib library) is required to enable zlib functions)
+      AMIS_ZLIB=no
+    fi
+  else
+    AC_WARN(zlib library is required to enable zlib functions)
+    AMIS_ZLIB=no
+  fi
+else
+  AC_MSG_RESULT(no)
+  AMIS_ZLIB=no
+fi
+
+
+
+AC_ARG_ENABLE(parallel, [ --enable-parallel	enable parallel processing (experimental) [default no]],, enable_parallel=no)
+AC_MSG_CHECKING(whether to enable parallel processing)
+if test "$enable_parallel" = "yes"; then
+  AC_MSG_RESULT(yes)
+  AC_CHECK_LIB(pthread, pthread_create)
+  AC_CHECK_LIB(thread, thr_create)
+  if test "$ac_cv_lib_thread_thr_create" = "yes"; then
+    AC_DEFINE(AMIS_PARALLEL, 1, [Enabling parallel processing])
+    AC_DEFINE(AMIS_SOLARIS_THREAD, 1, [Enabling Solaris threads])
+  else
+    if test "$ac_cv_lib_pthread_pthread_create" = "yes"; then
+      AC_DEFINE(AMIS_PARALLEL, 1, [Enabling parallel processing])
+      AMIS_PARALLEL=yes
+    else
+      AC_WARN(parallel processing could not be enabled without pthread)
+      AMIS_PARALLEL=no
+    fi
+  fi
+else
+  AC_MSG_RESULT(no)
+  AMIS_PARALLEL=no
+fi
+
+
+
+AC_ARG_ENABLE(long-double, [ --enable-long-double	enable long double [default no]],, enable_long_double=no)
+AC_MSG_CHECKING(whether to use long double as Real)
+if test "$enable_long_double" = "yes"; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(AMIS_USE_LONG_DOUBLE, 1, [Use long double as Real])
+  AMIS_USE_LONG_DOUBLE=yes
+else
+  AC_MSG_RESULT(no)
+  AMIS_USE_LONG_DOUBLE=no
+fi
+
+
+
+dnl AC_ARG_ENABLE(joint-prob, [ --enable-joint-prob	enable joint probability [default no]],, enable_joint_prob=no)
+dnl AC_MSG_CHECKING(whether to enable estimation of joint probability models)
+dnl if test "$enable_joint_prob" = "yes"; then
+dnl   AC_MSG_RESULT(yes)
+dnl   AC_DEFINE(AMIS_JOINT_PROB, 1, [Enable estimation of joint probability models])
+dnl   AMIS_JOINT_PROB=yes
+dnl else
+dnl   AC_MSG_RESULT(no)
+dnl   AMIS_JOINT_PROB=no
+dnl fi
+
+AC_ARG_ENABLE(warn-zero-emp, [ --enable-warn-zero-emp enable warning of zero empirical count [default no]],, enable_warn_zero_emp=no)
+AC_MSG_CHECKING(whether to enable warning of zero empirical count)
+if test "$enable_warn_zero_emp" = "yes"; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(AMIS_WARN_ZERO_EMPIRICAL_COUNT, 1, [enable warning of zero empirical count])
+  AMIS_WARN_ZERO_EMPIRICAL_COUNT=yes
+else
+  AC_MSG_RESULT(no)
+  AMIS_WARN_ZERO_EMPIRICAL_COUNT=no
+fi
+
+AC_ARG_ENABLE(fast-math, [ --enable-fast-math	enable "-ffast-math" option for compilation [default no]],, enable_fast_math=no)
+AC_MSG_CHECKING(whether to enable "-ffast-math" option)
+if test "$enable_fast_math" = "yes"; then
+  AC_MSG_RESULT(yes)
+  AM_CXXFLAGS="$AM_CXXFLAGS -ffast-math"
+  AMIS_FAST_MATH=yes
+else
+  AC_MSG_RESULT(no)
+  AMIS_FAST_MATH=no
+fi
+
+AC_OUTPUT( Makefile src/Makefile include/Makefile include/amis/Makefile test/Makefile manual/Makefile manual/examples/Makefile )

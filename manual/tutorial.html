@@ -1,0 +1,403 @@
+
+<!doctype html public "-//w3c//dtd html 4.0//en">
+<html>
+
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-2022-jp">
+<link rev="made" href="mailto:yusuke@is.s.u-tokyo.ac.jp">
+<link rel="stylesheet" type="text/css" href="tutorial.css">
+<title>Amis</title>
+</head>
+
+
+
+<body>
+
+<a href="index.html">Index</a>
+<a href="tutorial.ja.html">Japanese version</a>
+
+<hr>
+
+<h1>Amis short tutorial</h1>
+
+<div class="author">
+June 8th, 2006<br>
+Kazuhiro Yoshida<br>
+Department of Computer Science, University of Tokyo<br>
+kyoshida AT is.s.u-tokyo.ac.jp
+</div>
+
+<hr>
+
+<h2>Maximum entropy models</h2>
+A maximum entropy model gives a probability <span class="math">p(x)</span> of an event,
+by representing an event <span class="math">x</span> as a bundle of
+<em>feature functions</em> (or <em>features</em> in short) <span class="math">f_i</span>.
+<span class="math">f_i</span> are the functions that take event and return real values,
+and each <span class="math">i</span> corresponds to one characteristic.
+Most usually, <span class="math">f_i(x)</span>
+gives how many times the characteristic <span class="math">f_i</span>
+is observed in an event <span class="math">x</span>
+</p>
+
+<p>
+Given an event <span class="math">x</span> and feature
+functions <span class="math">f_i</span>, a maximum entropy model gives a
+probability by the following formula.
+<blockquote>
+<span class="math">p(x) = 1/Z exp( sum( l_i * f_i(x) )
+= 1/Z prod( a_i^f_i(x) )</span>
+</blockquote>
+<span class="math">l_i</span> (lambda) or <span class="math">a_i</span>
+(alpha) is a model parameter, and intuitively, it represents the
+weight of a feature <span class="math">f_i</span>.  <span
+class="math">Z</span> is a normalizing factor for letting the
+summation of probabilities <span class="math">p(x)</span> be 1.
+In other words, maximum entropy model gives each choice in an event
+the probability which is proportional to the product of
+<span class="math">a_i</span> that correspond to the features activated in that choice.
+</p>
+
+<p>
+Maximum entropy method estimates the parameters of the above model
+to maximize the likelihood of training data.
+Smoothing of the estimation by means of maximum a posteriori method
+is also widely used to avoid over-training.
+Estimation algorithms of Amis which contain "MAP" in their names
+support Gaussian priors, and "BC" exponential priors.
+</p>
+
+
+<p>
+The most typical procedure for using Amis to solve real problems is as follows.
+<ul>
+  <li>Split the data into training, development, and test data sets.
+  <li>Design the model and feature set.
+      Write a program to generate Amis data files
+      from the training data, and generate model and event files
+      "example.model" and "example.event" (and example.fixmap, if needed.)
+  <li>Determine the configuration of Amis such as the parameter estimation algorithm,
+      and write example.conf
+      <p>
+      Configuration file may look like this,
+      if your event file is in Amis format
+      and the BFGSMAP estimation algorithm is to be used.
+<pre>
+DATA_FORMAT     Amis
+FEATURE_TYPE    binary
+MODEL_FILE      example.model
+EVENT_FILE      example.event
+OUTPUT_FILE     example.output
+FIXMAP_FILE	example.fixmap    # when DATA_FORMAT is AmisFix
+LOG_FILE        example.log
+ESTIMATION_ALGORITHM    BFGSMAP
+MAP_SIGMA	20
+NUM_ITERATIONS  1000
+PRECISION       6
+</pre>
+      </p>
+      <p>
+      DATA_FORMAT is selected according to the type of the problem (we will see it in detail later.)
+
+      FEATURE_TYPE is the range of the values of feature functions.
+      If you specify "binary", you cannot specify the values of features and
+      the only way to signal the strength of activation will be to repeat the same feature in a single event.
+      The value of FEATURE_TYPE should be either of binary, integer, real,
+      and the latter is more general but may work more slowly.
+
+      MAP_SIGMA is the standard deviation of the prior distribution.
+      It is difficult to predict the good values of MAP_SIGMA in advance,
+      and we usually choose the value the value which maximize the performance on the development set.
+      I would recommend you to start the experiment
+      by using the value between 10 and 1000 or around.
+
+      NUM_ITERATIONS specifies the maximum number of iterations of the estimation algorithm.
+      The program may stop before NUM_ITERATIONS is reached,
+      if the improvement of the objective function becomes small enough
+      (judged by effective digits specified as PRECISION).
+      </p>
+  <li>Run amis by
+<pre>
+% amis example.conf
+</pre>
+      and example.output is generated.
+      <p>
+      Computational cost (both time and space) for each iteration will be the order
+      of the size of input files.
+      </p>
+  <li>Write a program which reads parameters from example.output and analyzes new data.
+      <p>
+      By default, Amis outputs <span class="math">a_i</span> of the above formula.
+      </p>
+  <li>Evaluate the result using the development data, and do model design and feature selection again,
+      to improve the result.
+</ul>
+
+</p>
+
+<h3>Using AmisFix format</h3>
+AmisFix format is used to solve the
+problems which can be treated as a task to assign labels to targets of classification,
+such as document classification.
+Let us consider the problem of predicting the part-of-speech (POS) of a word.
+In this case,
+we can regard each word in documents as an event,
+and the word and its correct POS can be given to amis as training data.
+(Let us assume there are only three POSs, N[oun], V[erb] and A[djective], to simplify the problem.)
+Let us use the following as training data.
+<pre>
+events -> N
+parameter -> N
+goes -> V
+killed -> V
+green -> A
+faster -> A
+</pre>
+The first line means that
+"we observed a word events and its POS was N."
+Then, if we are to use "surface string of the word", "significant suffixes" and "whether the word is shorter than 6 letters"
+as features, we will prepare example.fixmap which looks like as follows.
+<pre>
+N V A        # Target labels
+events     N f_events_N     V f_events_V     A f_events_A
+parameter  N f_parameter_N  V f_parameter_V  A f_parameter_A
+goes       N f_goes_N       V f_goes_V       A f_goes_A
+killed     N f_killed_N     V f_killed_V     A f_killed_A
+green      N f_green_N      V f_green_V      A f_green_A      
+faster     N f_faster_N     V f_faster_V     A f_faster_A
+-s         N f_-s_N         V f_-s_V         A f_-s_A
+-ed        N f_-ed_N        V f_-ed_V        A f_-ed_A
+-er        N f_-er_N        V f_-er_V        A f_-er_A
+longer-5   N f_longer-5_N   V f_longer-5_V   A f_longer-5_A
+shorter-6  N f_shorter-6_N  V f_shorter-6_V  A f_shorter-6_A
+</pre>
+For instance, the feature f_goes_N takes the value 1 if the word "goes" appears as N and 0 otherwise.
+(In this example, example.fixmap does not have significant information,
+because feature names are straightforward combinations of label names and property names.
+We will see an example of informative fixmap later.)
+
+In example.model, we list the feature names which appear in fixmap
+(the names beginning with 'f' in this example), followed by its initial values.
+Theoretically, initial values do not affect the optimal values,
+and we usually let them be 1.0.
+<pre>
+f_events_N     1.0
+f_events_V     1.0
+f_events_A     1.0
+f_parameter_N  1.0
+f_parameter_V  1.0
+f_parameter_A  1.0
+f_goes_N       1.0
+f_goes_V       1.0
+f_goes_A       1.0
+...
+</pre>
+
+An event file is as follows.
+<pre>
+N 1 events -s longer-5   # A word which has properties "events" "-s" "longer-5" happened to be N
+N 1 parameter longer-5   # A word which has properties "parameter" "longer-5" happened to be N
+V 1 goes -s shorter-6
+V 1 killed -ed longer-5
+A 1 green shorter-6
+A 1 faster -er longer-5
+</pre>
+
+Now we can run amis
+<pre>
+% amis example.conf
+</pre>
+and get the following example.output.
+<pre>
+f_events_N	4.179041e+00
+f_events_V	3.470270e-01
+...
+f_-s_A	2.631215e-01
+f_-ed_N	3.289747e-01
+f_-ed_V	5.920547e+00
+f_-ed_A	5.134234e-01
+...
+f_longer-5_A	6.951490e-01
+f_shorter-6_N	2.592765e-01
+f_shorter-6_V	1.482556e+00
+f_shorter-6_A	2.601511e+00
+</pre>
+
+To predict the POS of the word "died",
+which has the properties "-ed" and "shorter-6",
+we can get the weights of each choice by consulting example.fixmap and example.output:
+<ul>
+  <li>The weight of the prediction "N" is 0.0853, which is the product of the weights of "f_-ed_N" and "f_shorter-6_N".
+  <li>The weight of the prediction "V" is 8.78, which is the product of the weights of "f_-ed_V" and "f_shorter-6_V".
+  <li>The weight of the prediction "A" is 1.34, which is the product of the weights of "f_-ed_A" and "f_shorter-6_A".
+</ul>
+By normalizing these, we obtain
+p(N|died)=0.084, p(V|died)=0.86, p(A|died)=0.13
+and the POS of died is predicted to be V.
+(If we just want to predict the POS and the probability values are out of concern,
+normalization is unnecessary.)
+
+<p>
+In the above example, different labels (i.e. POSs) are always accompanied by different features, but
+we sometimes want to make several labels share same features.
+For example, the suffix "-s" is useful to eliminate the choice of "A", 
+but it should be less significant to determine whether it is N or V.
+To capture the situation, we can add a property "-s-NV" to our FIXMAP_FILE as follows:
+<pre>
+-s-NV      N f_-s-NV_NorV   V f_-s-NV_NorV   A f_-s-NV_A
+</pre>
+note that co-occurrence with both N and V are mapped to the same feature.
+(Event and model files should correspondingly be modified.)
+
+</p>
+
+
+<h3>Using Amis format</h3>
+Some problems does not take the form of selecting one from a fixed number of choices.
+For example, let us consider the problem of selecting the main verb of a given sentence.
+This problem can be solved by developing a binary classifier which determine
+whether the target word is the main verb or not,
+but it could more naturally be solved by a classifier which selects
+the main verb where the possible choices are the words in a sentence.
+However, such classifiers does not conform to AmisFix event files, because
+the number of the choices depends on the sentence length.
+
+We can use Amis format in such a situation.
+(AmisFix format event files always have equivalent Amis format event files.)
+Let the following be the training data (the words in [] are main verbs of each sentence):
+<pre>
+I [killed] a boy
+He [died]
+I [promised] to kill him
+His brother [killed] me
+</pre>
+
+If the POS of each word is also given as a part of the training data,
+we can use "the POS of the word", "the POS of the previous word" and "whether a verb appeared before the word"
+as features, and create the following model and event files.
+
+<pre>
+POS-DT         1.0  # determiners
+POS-N          1.0  # nouns
+POS-PN         1.0  # pronouns
+POS-P          1.0  # prepositions
+POS-V          1.0  # verbs
+Prev-DT        1.0
+Prev-N         1.0
+Prev-None      1.0  # First word and no previous word
+Prev-PN        1.0
+Prev-P         1.0
+Prev-V         1.0
+Prev_Verb-NO   1.0  # Whether a verb appeared before
+Prev_Verb-YES  1.0
+</pre>
+
+<pre>
+event1
+0 POS-PN Prev-None Prev_Verb-NO  # I
+1 POS-V Prev-PN Prev_Verb-NO     # killed
+0 POS-DT Prev-V Prev_Verb-YES    # a
+0 POS-N Prev-DT Prev_Verb-YES    # boy
+
+event2
+0 POS-PN Prev-None Prev_Verb-NO  # He
+1 POS-V Prev-PN Prev_Verb-NO     # died
+
+event3
+0 POS-PN Prev-None Prev_Verb-NO  # I
+1 POS-V Prev-PN Prev_Verb-NO     # promised
+0 POS-P Prev-V Prev_Verb-YES     # to
+0 POS-V Prev-P Prev_Verb-YES     # kill
+0 POS-PN Prev-V Prev_Verb-YES    # him
+
+event4
+0 POS-PN Prev-None Prev_Verb-NO  # His
+0 POS-N Prev-PN Prev_Verb-NO     # brother
+1 POS-V Prev-N Prev_Verb-NO      # killed
+0 POS-PN Prev-V Prev_Verb-YES    # me
+</pre>
+
+We can run amis by
+<pre>
+% amis example.conf
+</pre>
+and obtain example.output.
+The calculation of probabilities is also
+similar to the case of AmisFix format.
+
+
+<h3>Using AmisTree format</h3>
+<p>
+Let us solve the problem of disambiguating CFG parsing results.
+We can use an Amis format event file for the training,
+because disambiguation of parse trees is a task of selecting
+the correct parse tree from the parse trees licensed by the grammar.
+</p>
+<p>
+For example, let us think that the given CFG provides the following four parses for a sentence
+"time flies like an arrow", while the first one is correct.
+<ul>
+  <li>(S (N time) (VP (V flies) (PP (P like) (NP (D an) (N arrow)))))
+  <li>(S (NP (N time) (N flies)) (VP (V like) (NP (D an) (N arrow))))
+  <li>(S (S (V time) (N flies)) (PP (P like) (NP (D an) (N arrow))))
+  <li>(S (V time) (NP (N flies) (PP (P like) (NP (D an) (N arrow)))))
+</ul>
+</p>
+
+<p>
+Let us associate
+a feature named "f-A-B_C" to each subtree of the shape "(A (B ...) (C ...))",
+(It is similar to the scoring scheme of PCFG, where such a subtree
+is given a score <span class="math">P(BC|A)</span>.)
+In addition, the feature that represents the parent symbol "f-A" is also used, expecting better generalization.
+The above event can be written in Amis format as follows:
+<pre>
+event1
+0 f-S f-S-NP_VP f-NP f-NP-N_N f-N f-N_time f-N f-N_flies f-VP f-VP-V_NP f-V f-V_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+0 f-S f-S-S_PP f-S f-S-V_N f-V f-V_time f-N f-N_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+0 f-S f-S-V_NP f-V f-V_time f-NP f-NP-N_PP f-N f-N_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+1 f-S f-S-N_VP f-N f-N_time f-VP f-VP-V_PP f-V f-V_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow
+</pre>
+</p>
+<p>
+This case is not problematic because there are only four possible parse trees.
+However, if we are to develop a practical CFG parser,
+the ambiguity of the grammars should be higher,
+and the training data should contain longer sentences which have
+large number of possible analyses.
+In such a situation, Amis format has difficulties because
+the number of observed and complement events will be
+intractably large number, resulting in
+an enormous event file and computational cost.
+</p>
+
+<p>
+But close look at the above event reveals its redundancies:
+for example, the set of feature "f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow"
+appear in more than one analyses.
+When observed and complement events are sharing features like this,
+AmisTree format could be used to reduce the size of event files and the cost of computation by
+an order of magnitude.
+In this case, the above Amis format event is equivalent to the following AmisTree format event.
+<pre>
+event1
+1 f-S f-S-N_VP f-N f-N_time f-VP f-VP-V_PP f-V f-V_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+{ _ ( _ f-S { _ ( _ f-S-NP_VP { _ ( _ f-NP { _ ( _ f-NP-N_N { d_4 ( _ f-N { _ ( _ f-N_time ) } ) } { d_6 ( _ f-N { _ ( _ f-N_flies ) } ) } ) } ) } { _ ( _ f-VP { _ ( _ f-VP-V_NP { _ ( _ f-V { _ ( _ f-V_like ) } ) } { d_12 ( _ f-NP { _ ( _ f-NP-D_N { _ ( _ f-D { _ ( _ f-D_an ) } ) } { _ ( _ f-N { _ ( _ f-N_arrow ) } ) } ) } ) } ) } ) } ) ( _ f-S-S_PP { _ ( _ f-S { _ ( _ f-S-V_N { d_20 ( _ f-V { _ ( _ f-V_time ) } ) } $d_6 ) } ) } { d_24 ( _ f-PP { _ ( _ f-PP-P_NP { _ ( _ f-P { _ ( _ f-P_like ) } ) } $d_12 ) } ) } ) ( _ f-S-V_NP $d_20 { _ ( _ f-NP { _ ( _ f-NP-N_PP $d_6 $d_24 ) } ) } ) ( _ f-S-N_VP $d_4 { _ ( _ f-VP { _ ( _ f-VP-V_PP { _ ( _ f-V { _ ( _ f-V_flies ) } ) } $d_24 ) } ) } ) } ) }
+</pre>
+The above feature forest can be obtained by directly converting a chart
+which is obtained as a result of dynamic programming parsing algorithms like CKY algorithm.
+</p>
+<p>
+Nonetheless, this approach has some shortcomings.
+For example, if we want to use features which cover wider range of parse trees,
+like the features used in headed PCFGs,
+the common subtrees among the analyses will become smaller,
+and the size of the feature forest will be larger.
+Generally speaking, in AmisTree events,
+there is a trade-off between the size of an event and
+the locality of features that can be used.
+</p>
+
+</html>
+

@@ -1,0 +1,22 @@
+event1
+0 POS-PN Prev-None Prev_Verb-NO  # I
+1 POS-V Prev-PN Prev_Verb-NO     # killed
+0 POS-DT Prev-V Prev_Verb-YES    # a
+0 POS-N Prev-DT Prev_Verb-YES    # boy
+
+event2
+0 POS-PN Prev-None Prev_Verb-NO  # He
+1 POS-V Prev-PN Prev_Verb-NO     # died
+
+event3
+0 POS-PN Prev-None Prev_Verb-NO  # I
+1 POS-V Prev-PN Prev_Verb-NO     # promised
+0 POS-P Prev-V Prev_Verb-YES     # to
+0 POS-V Prev-P Prev_Verb-YES     # kill
+0 POS-PN Prev-V Prev_Verb-YES    # him
+
+event4
+0 POS-PN Prev-None Prev_Verb-NO  # His
+0 POS-N Prev-PN Prev_Verb-NO     # brother
+1 POS-V Prev-N Prev_Verb-NO      # killed
+0 POS-PN Prev-V Prev_Verb-YES    # me

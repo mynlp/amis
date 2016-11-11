@@ -1,0 +1,715 @@
+<!doctype html public "-//w3c//dtd html 4.0//en">
+<html>
+
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-2022-jp">
+<link rev="made" href="mailto:yusuke@is.s.u-tokyo.ac.jp">
+<link rel="stylesheet" type="text/css" href="manual.css">
+<title>Amis</title>
+</head>
+
+
+
+<body>
+
+<a href="index.html">Index</a>
+<a href="manual.html">English version</a>
+
+<hr>
+
+<h1>Amis - A maximum entropy estimator for feature forests</h1>
+
+<div class=author>
+2006年6月8日<br>
+吉田和弘<br>
+東京大学大学院 情報理工学系研究科 コンピュータ科学専攻<br>
+kyoshida AT is.s.u-tokyo.ac.jp
+</div>
+
+
+
+<hr>
+
+<h2><a name="index">目次</a></h2>
+
+<ul>
+
+<li><a href="#introduction">ソフトウェア概要</a>
+<li><a href="#requirements">稼働環境</a>
+<ul>
+  <li><a href="#hardware">ハードウェア要件</a>
+  <li><a href="#software">ソフトウェア要件</a>
+</ul>
+<li><a href="#installation">インストール，起動方法</a>
+<ul>
+  <li><a href="#install">インストール</a>
+  <li><a href="#running">起動方法</a>
+</ul>
+<li><a href="#input_output">入出力仕様</a>
+<ul>
+  <li><a href="#amis_model_file">入力モデルファイル</a>
+  <li><a href="#amis_event_file">入力イベントファイル</a>
+  <ul>
+    <li><a href="#event_amis">Amis形式</a>
+    <li><a href="#event_amisfix">AmisFix形式</a>
+    <li><a href="#event_amistree">AmisTree形式</a>
+    <li><a href="#event_amiscrf">AmisCRF形式</a>
+  </ul>
+  <li><a href="#amis_output">出力仕様</a>
+</ul>
+<li><a href="#refprob">参照分布の利用</a>
+<li><a href="#internal">内部仕様</a>
+<li><a href="#others">特記事項(制約，既知のバグ等)</a>
+<li><a href="#references">参考文献</a>
+
+</ul>
+
+
+
+<hr>
+
+<h2><a name="introduction">ソフトウェア概要</a></h2>
+
+<p>
+本ソフトウェアは，<a href="#Berger1996">最大エントロピーモデル 
+(Maximum entropy model) [1]</a> のパラメータ推定を行なうプログラムです．
+事象(event)を学習データとし，学習データの尤度を最適化するパラメータを出
+力します．
+以下のような機能をサポートしています．
+</p>
+
+<ul>
+  <li><a href="#Miyao2002">Feature forest に対するパラメータ推定アルゴリズム[2]</a>
+  <li>パラメタ推定アルゴリズムとして<a href="#Nocedal1980">limited-memory BFGS [4]</a>，
+      <a href="#Darroch1972">GIS [5]</a>．
+      をサポート
+  <li><a href="#Chen1999">Gaussian prior distributionを用いた MAP 推定 [6]</a>
+  <li><a href="#Benson2001">BLMVM [7]</a>アルゴリズムを用いた，
+      <a href="#Kazama2003">不等式制約MEモデル [8]</a>の推定
+  <li>イベントファイルの圧縮 (gz, bz2 形式)
+</ul>
+
+
+<hr>
+
+<h2><a name="requirements">稼働環境</a></h2>
+
+<h3><a name="hardware">ハードウェア要件</a></h3>
+
+<dl>
+  <dt>CPU <dd>PentiumIII 500MHz 以上
+  <dt>メモリ <dd>256 MB 以上
+  <dt>ハードディスク <dd>50MB 以上
+</dl>
+
+<p>
+上記を満たすIAマシン，もしくは同等スペックのSparcマシンでの使用を推奨します．
+入力データのサイズによっては，さらにメモリ・ハードディスクが必要となります．
+（基本的には，入力データに比例するサイズの記憶領域を必要とします）
+</p>
+
+
+<h3><a name="software">ソフトウェア要件</a></h3>
+
+<dl>
+  <dt>OS <dd>Linux, Solaris
+  <dt>コンパイラ <dd>g++ 3.2 以上
+  <dt>ライブラリ <dd>標準C++ライブラリ
+</dl>
+
+<p>
+g++ 3.2.3，g++ 4.0.3 で動作を確認しました．
+</p>
+
+<hr>
+
+<h2><a name="installation">インストール，起動方法</a></h2>
+
+<h3><a name="install">インストール</a></h3>
+
+<p>
+以下のステップでコンパイルし，インストールします．
+(以下の例で，% はシェルのプロンプトを表します．)
+</p>
+
+<ol>
+  <li>configure スクリプトを実行します．<br>
+      <pre>% ./configure</pre>
+      デフォルトでは /usr/local/ 以下に実行ファイルがインストールされま
+      すが，他のディレクトリ($DIR とする)にインストールしたい時は，以下
+      のようにオプションを指定してください．
+      <pre>% ./configure --prefix=$DIR</pre>
+      また，--prefix 以外にも以下のオプションに対応しています．
+      <table border>
+      <tr><th>オプション<th>デフォルト<th>有効な値<th>効果</tr>
+      <tr><td>--enable-debug<td>no<td>0 〜 5 または no
+          <td>デバッグメッセージを表示する/しないを設定します．数が大き
+          いほどたくさんのメッセージを表示します．</tr>
+      <tr><td>--enable-profile<td>no<td>0 〜 5 または no
+          <td>プロファイル(各関数の実行時間の測定)をする/しないを設定し
+          ます．数が大きいほどたくさんの関数のプロファイルをとります．
+          </tr>
+      </table>
+      その他のオプションについては，configure スクリプトのヘルプ
+      (--help オプションで表示されます) で見ることができますが，
+      正しく動かない機能もあるので注意してください．
+  <li>make でプログラムをコンパイルします．
+  <pre>% make</pre>
+  コンパイルが終了すると ./src/ ディレクトリに amis という実行ファイル
+  が作成されます．
+  <li>実行ファイルやマニュアルをインストールします．
+  <pre>% make install</pre>
+</ol>
+
+<p>
+以上により，/usr/local/bin/amis がインストールされます．
+</p>
+
+
+<h3><a name="running">起動方法</a></h3>
+
+<p>
+Amis を起動するには，設定ファイル(<a href="#input_output">後述</a>)を引
+数として，amis を実行します．
+<pre>% amis [設定ファイル]</pre>
+引数を省略すると，デフォルトでは amis.conf を設定ファイルとして読み込み
+ます．amis.conf が読み込めないときは，エラーとなり
+終了します．
+起動時にオプションを指定することもできます．
+</p>
+
+<p>
+設定ファイルには，設定項目の名前とその値の組を記述します．具体的には，
+以下のようになります．
+<pre>
+DATA_FORMAT     Amis
+FEATURE_TYPE    integer
+MODEL_FILE      example.model
+EVENT_FILE      example.event
+OUTPUT_FILE     example.output
+LOG_FILE        example.log
+ESTIMATION_ALGORITHM    BFGS
+NUM_ITERATIONS  1000
+REPORT_INTERVAL 1
+PRECISION       6
+</pre>
+</p>
+
+<p>
+オプションを指定する場合は、
+<pre>
+% amis -e foo.event -a BFGSMAP [設定ファイル]
+</pre>
+のようになります．
+</p>
+
+<p>
+各設定は，以下の優先順位で有効になります．
+<ol>
+  <li>起動時オプション
+  <li>設定ファイル
+  <li>デフォルト値
+</ol>
+</p>
+
+
+<p>
+指定できるオプションは以下の通りです．この他のオプションは，"--help" で
+詳しい説明が表示されますが，正しく動かない機能もあるので注意してください．
+
+<table border>
+<tr><th>設定項目<th>実行時オプション<th>デフォルト値<th>有効な値<th>効果</tr>
+
+<tr>
+  <td>BC_LOWER<td>--bc-lower<td>1.0<td>0以上の実数<td>
+  BLMVMBC，BLMVMBCMAPで使われる，不等式制約の下限．
+  論文<a href="#Kazama2003">[8]</a>のBが，この値の逆数に設定される．
+  (0に近いほど，結果は一様分布に近づく)
+</tr>
+
+<tr>
+  <td>BC_UPPER<td>--bc-upper<td>1.0<td>0以上の実数<td>
+  BLMVMBC，BLMVMBCMAPで使われる，不等式制約の上限．
+  論文<a href="#Kazama2003">[8]</a>のAが，この値の逆数に設定される．
+  (0に近いほど，結果は一様分布に近づく)
+</tr>
+
+<tr>
+  <td>DATA_FORMAT<td>--data-format，-d<td>Amis<td>Amis，AmisTree，AmisFix, AmisCRF<td>
+  データファイルの形式
+</tr>
+
+<tr>
+  <td>ESTIMATION_ALGORITHM<td>--estimation-algorithm，-a<td>GIS<td>GIS，GISMAP，BFGS，BFGSMAP，BLMVMBC，BLMVMBCMAP<td>
+  推定アルゴリズム
+</tr>
+
+<tr>
+  <td>EVENT_FILE [1] [2] ... [n]<td>--event-file，-e
+  <td>amis.event<td>ファイル名のリスト<td>
+  入力イベントファイルのリスト．「-」を指定すると，対応する番号に標準入力をとる．
+  オプションの場合は複数指定しても良い
+</tr>
+
+<tr>
+  <td>EVENT_FILE_COMPRESSION<td>--event-file-compression<td><td>raw，gz，bz2<td>
+  入力イベントファイルの圧縮
+</tr>
+
+<tr>
+  <td>EVENT_ON_FILE<td>--event-on-file<td>false<td>真偽値<td>
+  計算の際イベントをファイル上に保持する（イベントがメモリに乗り切らないときに使用）
+</tr>
+
+<tr>
+  <td>EVENT_ON_FILE_NAME<td>--event-on-file-name<td>amis.event.tmp<td>ファイル名<td>
+  EVENT_ON_FILEで使われるファイル名
+</tr>
+
+<tr>
+  <td>FEATURE_TYPE<td>--feature-type，-f<td>binary<td>binary，integer，real<td>
+  素性関数の値のタイプ．動作速度に影響する．
+</tr>
+
+<tr>
+  <td>FEATURE_WEIGHT_TYPE<td>--feature-weight-type，-w<td>alpha<td>lambda，alpha<td>
+  モデルファイル，参照確率ファイルの入出力の際の素性の重みのタイプ．
+</tr>
+
+<tr>
+  <td>FILTER_INACTIVE_FEATURES<td>--filter-inactive-features<td>false<td>真偽値<td>
+  PRECISIONの範囲で無視しうる素性を出力しない
+</tr>
+
+<tr>
+  <td>FIXMAP_FILE [1] [2] ... [n]<td>--fixmap-file，-x
+  <td>amis.fixmap<td>ファイル名のリスト<td>
+  AmisFix形式の，イベントファイルの書式設定ファイルのリスト．「-」を指定すると，対応する番号に標準入力をとる．
+  オプションの場合は複数指定しても良い
+</tr>
+
+<tr>
+  <td>FIXMAP_FILE_COMPRESSION<td>--fixmap-file-compression<td><td>raw，gz，bz2<td>
+  FIXMAP_FILEの圧縮
+</tr>
+
+<tr>
+  <td>LOG_FILE<td>--log-file，-l<td>amis.log<td>ファイル名<td>
+  推定の経過の出力先
+</tr>
+
+<tr>
+  <td>MAP_SIGMA<td>--map-sigma，-s<td>1<td>実数<td>
+  GISMAP，BFGSMAP，BLMVMBCMAPで使われる，事前分布の標準偏差
+  (0に近いほど，結果は一様分布に近づく)
+</tr>
+
+<tr>
+  <td>MEMORY_SIZE<td>--memory-size<td>5<td>整数
+  <td>BFGS，BLMVMにおける，使用メモリ量．
+</tr>
+
+<tr>
+  <td>MODEL_FILE [1] [2] ... [n]<td>--model-file，-m<td>amis.model<td>ファイル名のリスト
+  <td>入力モデルファイルのリスト．「-」を指定すると，対応する番号に標準入力をとる．
+  オプションの場合は複数指定しても良い
+</tr>
+
+<tr>
+  <td>MODEL_FILE_COMPRESSION<td>--model-file-compression<td><td>raw，gz，bz2
+  <td>入力モデルファイルの圧縮
+</tr>
+
+<tr>
+  <td>NUM_ITERATIONS<td>--num-iterations，-i<td>200<td>整数
+  <td>推定アルゴリズムの反復回数
+</tr>
+
+<tr>
+  <td>OUTPUT_FILE<td>--output-file，-o<td>amis.output<td>ファイル名
+  <td>出力モデルファイルのファイル名
+</tr>
+
+<tr>
+  <td>OUTPUT_FILE_COMPRESSION<td>--output-file-compression<td><td>raw，gz，bz2
+  <td>出力モデルファイルの圧縮
+</tr>
+
+<tr>
+  <td>PARAMETER_TYPE<td>--parameter-type<td>alpha<td>alpha，lambda
+  <td>内部で計算に使うパラメタのタイプ．alphaだと高速に，lambdaだと頑健に動作する
+</tr>
+
+<tr>
+  <td>PRECISION<td>--precision，-p<td>6<td>整数
+  <td>推定結果の有効桁数
+</tr>
+
+<tr>
+  <td>REFERENCE_DISTRIBUTION<td>--reference<td>false<td>真偽値
+  <td>参照分布の使用
+</tr>
+
+<tr>
+  <td>REFERENCE_FILE [1] [2] ... [n]<td>--reference-file<td>amis.ref<td>ファイル名のリスト
+  <td>参照分布のファイル名
+</tr>
+
+<tr>
+  <td>REPORT_INTERVAL<td>--report-interval，-r<td>1<td>整数
+  <td>推定経過の出力の間隔
+</tr>
+
+</table>
+</p>
+
+
+
+<hr>
+
+<h2><a name="input_output">入出力仕様</a></h2>
+
+<p>
+amis を利用するには，上で述べた設定ファイルの他に，
+<a href="#amis_model_file">モデルファイル</a>, <a href="#amis_event_file">イベントファイル</a>
+を用意する必要があります．それぞれについて以下で説明します．
+</p>
+
+<p>
+各ファイルにおいて，# から行末まではコメントとして無視されます．コメント
+はスペースと同等の扱いとなります．各トークンはスペースまたはタブで区切
+られ，改行文字が行の終りを表します．また，コロン(:)は特別な文字として
+認識されます．これらの特別な文字をトークンの一部として使いたい時は，バッ
+クスラッシュ(\)でエスケープしてください．バックスラッシュ自身は \\ で
+表します．
+</p>
+
+<h3><a name="amis_model_file">入力モデルファイル</a></h3>
+
+<p>
+モデルファイルは，素性関数の名前と，それに対応する重みの初期値を与えるファイルです．
+</p>
+
+<pre>
+素性名    初期値
+素性名    初期値
+素性名    初期値
+...
+</pre>
+
+<p>
+一行が一素性に対応し，各行には素性名と素性の重みの初期値を，スペースまたはタブで区切って記述します．
+素性名には，スペース，タブ，コロン(:)，シャープ(#)以外の文字ならなんでも使えます．
+初期値は C スタイルの実数で記述します．
+初期値は正の実数（FEATURE_WEIGHT_TYPEがlambdaなら任意の実数）
+ならいくつでも構いませんが，
+普通は 1.0 （FEATURE_WEIGHT_TYPEがlambdaなら0.0）にします．
+</p>
+
+<h3><a name="amis_event_file">入力イベントファイル</a></h3>
+
+<p>
+イベントファイルでは，学習データとなる事象のリストを与えます．
+最大エントロピー法における事象は，観測事象(observed event)と補完事象(complement event)からなります．
+補完事象には，観測事象以外の，想定される選択肢を列挙します．
+各々の事象は，観測事象と補完事象の和集合のなかから，観測事象を選びとることと見なすことが出来ます．
+実際には，観測事象，補完事象ともに，そこで観測された素性を列挙することによって記述します．
+</p>
+
+<p>
+イベントファイルの形式は，Amis形式，AmisFix形式，およびAmisTree形式から選ぶことが出来ます．
+AmisFix形式は一定数のラベル集合から，分類対象に付与するラベルを選ぶ問題に使います．
+AmisTree形式は feature forest に対するパラメータ推定アルゴリズムを利用する時に使います．
+
+Amis形式とAmisTree形式は，理論的には同等の表現力を持ちますが，
+feature forestがコンパクトに記述できるような問題では，
+速度，メモリともにAmisTree形式のほうが大幅に高効率となります．
+
+AmisFix形式は，表現力が制限されますが，単純な分類問題ではAmis形式に比べて消費メモリが少なくなります．
+ただし，速度はAmis形式のほうが速くなる可能性があります．
+</p>
+
+
+<h4><a name="event_amis">Amis形式</a></h4>
+
+<p>
+<pre>
+event_1
+1    素性 素性 素性 ...
+0    素性 素性 素性 ...
+0    素性 素性 素性 ...
+0    素性 素性 素性 ...
+...
+
+event_2
+0    素性 素性 素性 ...
+1    素性 素性 素性 ...
+0    素性 素性 素性 ...
+...
+
+...
+</pre>
+
+ただし，「素性」の部分には，
+<pre>
+素性名
+</pre>
+を書きます．
+FEATURE_TYPEでintegerやrealを指定した場合は
+<pre>
+素性名:素性の値
+</pre>
+を書くこともできます．
+</p>
+
+<p>
+空行で分けられたブロックが一つの事象に対応します．一行目には，事象の名
+前を記述します．事象名には，上述した特殊文字以外の任意の文字が使えます．
+事象名は，推定には影響を与えないので，意味のない文字列でも構いません．
+
+次の行からは，各行に観測事象または補完事象を記述します．行の先頭には，
+その事象の観測回数を記述します．観測事象の場合は正の数，補完事象の場合
+は0になります．一つの事象につき観測事象は一つしか記述できません．
+観測回数の後ろに，発火した素性を列挙します．
+素性は，モデルファイルで記述したものを指定します．モデルファイルにない
+素性を指定するとエラーになります．各素性の後ろには，素性関数の値を指定
+することができます．上の例の通り，コロン(:)に続けて素性関数の値を指定
+します．省略した場合は１とみなされます．
+</p>
+
+<p>
+各事象は，空行で区切ります．空行は何行でも構いません．コメントのみの行
+も空行とみなされるので注意して下さい．
+</p>
+
+
+<h4><a name="event_amisfix">AmisFix形式</a></h4>
+
+<p>
+まず，イベントファイルから素性を取り出すために，
+FIXMAP_FILEとして，次の形式のファイルを指定します．
+<pre>
+ラベル名 ラベル名 ラベル名 ...
+特徴名 ラベル名 素性名  ラベル名 素性名 ...
+特徴名 ラベル名 素性名  ラベル名 素性名 ...
+特徴名 ラベル名 素性名  ラベル名 素性名 ...
+...
+</pre>
+</p>
+
+<p>
+イベントファイルとしては，次の形式のものを与えます．
+<pre>
+ラベル名 1 特徴 特徴 特徴 ...
+ラベル名 1 特徴 特徴 特徴 ...
+ラベル名 1 特徴 特徴 特徴 ...
+...
+</pre>
+
+ただし，「特徴」の部分には，
+<pre>
+特徴名
+</pre>
+または
+<pre>
+特徴名:素性の値
+</pre>
+を書きます．
+</p>
+
+
+<p>
+FIXMAPファイルの先頭の行では，分類に用いるラベルを列挙します．
+先頭以外の行は，一行が一つの特徴に対応し，
+各特徴がそれぞれのラベルと共起したときに発火する素性を指定します．
+</p>
+
+<p>
+イベントファイルは，一行が一つの観測事象に対応します．
+行頭には，観測されたラベルと，その事象の頻度を記述します．
+それに続けて，観測された特徴を列挙します．
+Amisは，行頭のラベルと，列挙された特徴を組み合わせて，
+FIXMAP_FILEの対応する素性からなる観測事象を作ります．
+補完事象は，行頭に書いたもの以外のラベルを用いて，自動的に作られます．
+</p>
+
+
+<h4><a name="event_amistree">入力仕様(AmisTree形式)</a></h4>
+
+<p>
+<pre>
+事象名
+頻度       素性 素性 素性 ...
+[disjunctive node]
+</pre>
+[disjunctive node]は，BNF風に書くと以下のようになります．
+<pre>
+[disjunctive node] :=
+  ノード名の参照 |
+  { ノード名 [conjunctive node] [conjunctive node] ... }
+[disjunctive node] :=
+  ノード名の参照 |
+  ( ノード名 素性 素性 ... [disjunctive node] [disjunctive node] ... )
+</pre>
+中かっこ及び小かっこの前後には必ずスペースを空けてください．
+スペースがない場合はノード名や素性名の一部とみなされます．
+</p>
+
+<p>
+具体的には，以下のようになります．
+<pre>
+event_1
+2       feature1:2 feature2:3 feature3
+{ dnode_1 ( node_1 feature1:2 { dnode_2 ( node_2 feature2:3 ) ( node_3 ) } { dnode_3 $node_2 ( node_4 feature3 ) } ) }
+
+event_2
+1       feature2:3
+{ dnode_1 ( node_1 feature1 ) ( node_2 { dnode_2 ( node_3 feature2:3 ) ( node_4 feature3 ) } ) }
+
+...
+</pre>
+</p>
+
+<p>
+Amis 形式と同様に，空行が事象の区切りを表します．AmisTree 形式では，一
+つの事象を３行で記述します．１行目は，事象の名前を記述します．２行目に
+は，その事象の観測回数と，観測事象の素性を記述します．上の例では，事象 
+event_1 は２回，event_2 は１回観測されたことを表します．Amis 形式と同
+様，素性の名前と素性関数の値を組で記述します．３行目には，観測事象およ
+び補完事象の feature forest を記述します．まず，disjunctive node は中
+かっこで表します．中かっこの中に，はじめにノード名を記述し，次に 
+conjunctive node をスペースで区切って並べます．
+ノード名は，イベント単位で一意になっている必要がありますが，
+共有する必要のないノードに対しては，'_'にすることもできます．
+conjunctive node は，小
+かっこまたはノード名で表します．小かっこで表すときは，最初にその 
+conjunctive node の名前を記述します．conjunctive node の名前は，ノード
+の共有を表すために使います．素性と同様に，特殊文字以外の任意の文字が使
+えます．その後にそのノードで発火する素性を記述します．素性の記述方法は 
+Amis 形式などと同じです．その後に，disjunctive node を記述することもで
+きます．conjunctive node や disjunctive node の共有を表すときは，ノー
+ド名を用います．既出のノードについて，そのノード名の先頭に $ をつけた
+ものでノードの共有を表します．上の例では，event_1 において，$node2 は
+前に出てきた node2 と共有していることを表します．このようにノードを共
+有して feature forest のサイズを小さくすると，計算量が小さくなり，スピー
+ドアップします．
+</p>
+
+<p>
+feature forestからは，次のような相互再帰的な手続きで，観測/補完事象の素性列を取り出すことができます．
+<ul>
+  <li>[disjunctive node]に出会ったら，子ノードのどれかから取り出した素性列を返す
+  <li>[conjunctive node]に出会ったら，そのノードの素性列と，全ての子ノードから取り出した素性列を合併して返す
+</ul>
+AmisTree形式のイベントは，この手続きで得られる全ての素性列が，観測/補完事象として現れているような
+Amis形式のイベントで表すことができます．
+パラメタ推定の際には，そのようなAmis形式のイベントファイルが与えられた場合と同等の計算が，
+feature forestのサイズに比例するコストで行われます．
+</p>
+
+
+<h3><a name="amis_output">出力仕様</a></h3>
+
+<p>
+amis は，素性とパラメータの組を、OUTPUT_FILEで指定したファイルに出力します．出力形式は，
+<a href="#model_file">モデルファイル</a>と同じです．出力形式がモデルファイ
+ルと同じなので，出力データを新たな入力として amis を使うこともできます．
+すなわち，ある程度学習したデータを元に，さらに学習を進めることができます．
+</p>
+
+<p>
+各素性に対応するパラメータ<span class=math>a_i</span>が出力されるので，
+未知のデータに対して発火する素性の<span class=math>a_i</span>の積を求め
+ることで，その確率値を計算することができます．
+</p>
+
+<hr>
+
+<h2><a name="refprob">参照分布の利用</a></h2>
+<h2><a name="internal">内部仕様</a></h2>
+
+準備中です．
+
+
+
+<hr>
+
+<h2><a name="others">特記事項(制約，既知のバグ等)</a></h2>
+<ul>
+  <li>扱えるイベント数，素性数はシステムリソースに依存します．
+  <li>メモリが足りない時は，EVENT_ON_FILE オプションを使って下さい．
+  <li>GIS や GISMAP で "Infinite!" というエラーメッセージが表示されたり，
+  BFGS アルゴリズムが収束しない(Line search in BFGS algorithm .. とい
+  うメッセージが表示される)時は，パラメタ推定の途中でオーバーフローや
+  アンダーフローを起こしている可能性があります．そのときは，
+  PARAMETER_TYPEにlambdaを指定して実行してみてください．
+  <li>Feature forest model では，観測事象で記述されている素性列が，
+  feature forest に必ず含まれている必要があります．amis はこの条件が満
+  たされているかどうかのチェックは行いませんので注意して下さい．そうなっ
+  ていない時は，パラメタ推定が収束しない場合があります．"forestcheck"
+  ツールを使うことでこの条件のチェックを行うことができます．
+</ul>
+
+
+
+<hr>
+
+<h2><a name="references">参考文献</a></h2>
+<p>
+<a name="Berger1996">
+[1] Adam L. Berger, Stephen A. Della Pietra and Vincent J. Della
+Pietra.  A maximum entropy approach to natural language processing.
+Computational Linguistics, 22(1):39-71, 1996.
+</a>
+
+<p>
+<a name="Miyao2002">
+[2] Yusuke Miyao and Jun'ichi Tsujii.  Maximum entropy estimation for
+feature forests.  In Proc. HLT2002.
+</a>
+
+<p>
+<a name="Pietra1997">
+[3] Stephen A. Della Pietra, Vincent J. Della Pietra and John
+Lafferty.  Inducing features of random fields.  IEEE Transactions on
+Pattern Analysis and Machine Intelligence, 19(4):380-393, 1997.
+</a>
+
+<p>
+<a name="Nocedal1980">
+[4] Jorge Nocedal.  Updating quasi-Newton matrices with limited
+storage.  Mathematics of Computation, 35:773-783, 1980.
+</a>
+
+<p>
+<a name="Darroch1972">
+[5] J. N. Darroch and D. Ratcliff.
+Generalized iterative scaling for log-linear models.
+Annals of Mathematical Statistics, 43:1470-1480, 1972.
+</a>
+
+<p>
+<a name="Chen1999">
+[6] Stanley F. Chen and Ronald Rosenfeld.
+A Gaussian prior for smoothing maximum entropy models.
+Technical Report CMUCS -99-108, Carnegie Mellon University, 1999.
+</a>
+
+<p>
+<a name="Benson2001">
+[7] Steven J. Benson and Jorge More'.
+A Limited-Memory Variable-Metric Algorithm for Bound-Constrained Minimization.
+Mathematics and Computer Science Division, Argonne National Laboratory,
+ANL/MCS-P909-0901, 2001.
+<p>
+<a name="Kazama2003">
+[8] Jun'ichi Kazama and Jun'ichi Tsujii.
+Evaluation and Extension of Maximum Entropy Models with Inequality Constraints.
+In the Proceedings of EMNLP 2003.
+</a>
+
+</body>
+
+</html>
+

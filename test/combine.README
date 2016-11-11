@@ -1,0 +1,18 @@
+Example of combination of features.  Since exactly two features are
+actived for all events, the results of GIS and IIS will be equivalent.
+
+p( x | y, z )
+
+feature 1	0, 0, _
+feature 2	1, 0, _
+feature 3	0, _, 0
+feature 4	1, _, 0
+feature 5	0, 0, 1
+feature 6	1, 0, 1
+
+1, 0, 0
+0, 0, 0
+1, 0, 1
+0, 0, 1
+1, 0, 1
+

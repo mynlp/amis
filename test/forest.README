@@ -1,0 +1,185 @@
+Test for IISTree - complex version
+
+alphabets denote conjunctive nodes, { } denote disjunctive nodes
+
+----------------------------------------------------------------------
+event_1
+
+observed:
+
+        / o - q
+  c - e
+        \ o - p
+
+forest:
+
+  root - { a b c }
+
+      { d e f }
+    /
+  a - { e f }
+    \
+      { d f }
+
+    / { d f }
+  b
+    \ { g }
+
+  c - { e f g }
+
+    / { h i }
+  d
+    \ { j k }
+
+    / { i o }
+  e
+    \ { o }
+
+  f - { h i j }
+
+      { j o }
+    /
+  g - { r s }
+    \
+      { j s }
+
+  i - { }
+
+    / { l }
+  j
+    \ { m n }
+
+  o - { p q }
+
+    / { t u }
+  s
+    \ { }
+
+----------------------------------------------------------------------
+event_2
+
+observed:
+
+        / r
+      e
+    /   \ s - m
+  a
+    \   / k
+      f         / p
+        \ i - l
+                \ m
+
+forest:
+
+  root - { a b }
+
+    / { d f }
+  a
+    \ { e }
+
+    / { d g }
+  b
+    \ { d e g }
+
+  d - { h }
+
+    / { o r }
+  e
+    \ { s }
+
+    / { i j }
+  f
+    \ { k }
+
+  i - { l }
+
+    / { m n }
+  l
+    \ { p }
+
+  s - { m q }
+
+----------------------------------------------------------------------
+
+event_3
+
+observed:
+
+        / o - r
+      e
+    /   \ n - t
+  a
+    \       / n - s
+      g - j
+            \ q - s
+
+forest:
+
+  root - { a }
+
+    / { d g }
+  a
+    \ { d e }
+
+    / { i j }
+  d
+    \ { j k }
+
+    / { o }
+  e
+    \ { n }
+
+  g - { j k }
+
+  i - { }
+
+    / { q r }
+  j
+    \ { l m n }
+
+  n - { s t }
+
+  o - { r t }
+
+  q - { s }
+
+  r - { }
+
+----------------------------------------------------------------------
+event_4
+
+observed:
+
+      a - j - s
+    /
+  b
+    \           / t
+      d - h - k
+                \ u
+
+forest:
+
+  root - { b c }
+
+    / { d a }
+  b
+    \ { d g }
+
+  c - { a }
+
+  d - { h e }
+
+  a - { h j }
+
+  g - { k m }
+
+  h - { k r }
+
+  e - { k s }
+
+  j - { s }
+
+    / { t }
+  k
+    \ { s u }
+

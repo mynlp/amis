@@ -1,0 +1,6 @@
+N 1 events -s longer-5
+N 1 parameter longer-5
+V 1 goes -s shorter-6
+V 1 killed -ed longer-5
+A 1 green shorter-6
+A 1 faster -er longer-5

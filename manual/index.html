@@ -1,0 +1,96 @@
+<!doctype html public "-//w3c//dtd html 4.0//en">
+<html lang=ja>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-2022-jp">
+<link rel="stylesheet" type="text/css" href="index.css">
+<title>Amis</title>
+</head>
+
+
+<body>
+
+<h1>Amis - A maximum entropy estimator for feature forests</h1>
+
+<div class=author>
+Jun. 23th, 2006<br>
+Kazuhiro Yoshida<br>
+Department of Computer Science, University of Tokyo<br>
+kyoshida AT is.s.u-tokyo.ac.jp
+</div>
+
+<hr>
+
+<p>
+<em>Amis</em> is a parameter estimator for <a
+href="#Berger1996">maximum entropy models [1]</a>.
+Given a set of events as training data,
+the program outputs parameters that optimize
+the likelihood of the training data.
+</p>
+
+<h3>Download</h3>
+
+<p>
+  <li><a href="http://www-tsujii.is.s.u-tokyo.ac.jp/amis/amis-4.0.tar.gz">amis-4.0.tar.gz</a>
+</p>
+
+<p>
+Previous distributions:
+<ul>
+  <li><a href="http://www-tsujii.is.s.u-tokyo.ac.jp/amis/amis-2.0.tar.gz">amis-2.0.tar.gz</a>
+  <li><a href="http://www-tsujii.is.s.u-tokyo.ac.jp/amis/amis-2.95.tar.gz">amis-2.95.tar.gz</a> (Support for gcc3)
+  <li><a href="http://www-tsujii.is.s.u-tokyo.ac.jp/amis/amis-3.0.tar.gz">amis-3.0.tar.gz</a>
+  <li><a href="http://www-tsujii.is.s.u-tokyo.ac.jp/amis/amis-3.1.tar.gz">amis-3.1.tar.gz</a> (Support for gcc3.4)
+  <li><a href="http://www-tsujii.is.s.u-tokyo.ac.jp/amis/amis-3.1.1.tar.gz">amis-3.1.1.tar.gz</a>
+</ul>
+</p>
+
+<h3>Quick Installation</h3>
+
+Unpack the package, run "configure", and "make install".
+
+<pre>
+% tar xvzf amis-x.y.z.tar.gz
+% cd amis-x.y.z
+% ./configure
+% make install
+</pre>
+
+<p>
+This procedure installs "/usr/local/bin/amis"
+(you must have an access to "/usr/local/bin/").
+If you want to install it in another
+directory, see <a href="manual.html">Amis manual</a>.
+
+<h3>Manuals</h3>
+
+<ul>
+  <li><a href="manual.html">Amis 4.0 manual</a>
+  <li><a href="manual.ja.html">Amis 4.0 manual (Japanese)</a>
+  <li><a href="tutorial.html">Amis tutorial</a>
+  <li><a href="tutorial.ja.html">Amis tutorial (Japanese)</a>
+</ul>
+
+<h3><a name="references">References</a></h3>
+<p>
+<a name="Berger1996">
+[1] Adam L. Berger, Stephen A. Della Pietra and Vincent J. Della
+Pietra.  A maximum entropy approach to natural language processing.
+Computational Linguistics, 22(1):39-71, 1996.
+</a>
+</body>
+
+<hr>
+
+<a href="http://www-tsujii.is.s.u-tokyo.ac.jp/">Tsujii lab.</a>
+<a href="http://www.is.s.u-tokyo.ac.jp/">Dept. Information Science</a>
+<a href="http://www.u-tokyo.ac.jp/">University of Tokyo</a>
+
+<hr>
+
+<address>Kazuhiro Yoshida(kyoshida AT is.s.u-tokyo.ac.jp)</address>
+
+</body>
+</html>
+

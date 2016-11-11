@@ -1,0 +1,370 @@
+<!doctype html public "-//w3c//dtd html 4.0//en">
+<html>
+
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-2022-jp">
+<link rev="made" href="mailto:yusuke@is.s.u-tokyo.ac.jp">
+<link rel="stylesheet" type="text/css" href="tutorial.css">
+<title>Amis</title>
+</head>
+
+
+
+<body>
+
+<a href="index.html">Index</a>
+<a href="tutorial.html">English version</a>
+
+<hr>
+
+<h1>Amis short tutorial</h1>
+
+<div class=author>
+2006年6月8日<br>
+吉田和弘<br>
+東京大学大学院 情報理工学系研究科 コンピュータ科学専攻<br>
+kyoshida AT is.s.u-tokyo.ac.jp
+</div>
+
+<hr>
+
+<h2>最大エントロピー法とは</h2>
+<p>
+最大エントロピー法は，事象の確率分布<span class="math">p(x)</span>を計算するために，
+事象<span class="math">x</span>が持つ特徴を，
+<em>素性関数</em>(または素性) <span class="math">f_i</span>の集合を使って抽出します．
+<span　class="math">f_i(x)</span>は事象を受け取って実数を返す関数で，
+各 <span class="math">i</span> に対して一つの特徴が対応します．
+典型的には，各<span class="math">f_i(x)</span>は，
+事象xにおいて特徴<span class="math">f_i</span>を何回観測したかを表します．
+</p>
+
+<p>
+事象 <span class="math">e=&lt;x&gt;</span>, 素性関数
+<span class="math">f_i</span> が与えられた時，
+最大エントロピーモデルは以下の式で確率値を与えます．
+<blockquote>
+<span class="math">p(x) = 1/Z exp( sum( l_i * f_i(x) )
+= 1/Z prod( a_i^f_i(x) )</span>
+</blockquote>
+<span class="math">l_i</span> (lambda) または
+<span class="math">a_i</span> (alpha)はモデルのパラメータで，直観的には素性
+<span class="math">f_i</span> の重要度を表します．
+<span class="math">Z</span>は分布<span class="math">p(x)</span>を正規化するための数です．
+言い替えれば，最大エントロピー法によれば，イベントにおける各々の選択肢は，
+その選択肢を選んだときに発火する全ての素性に対応する<span class="math">a_i</span>
+の積に比例する確率を与えられます．
+</p>
+
+<p>
+最大エントロピー法は，上で述べたモデルの，訓練データに対する尤度を最大化することによって，
+訓練データに適合するモデルを得ます．
+訓練データに対する過適合を防ぐために，MAP推定によるスムージングも広く使われています．
+Amisでは，「MAP」を名前に含む推定アルゴリズムを使えば
+正規分布の事前分布を，また，「BC」を含むものを使えば
+指数分布の事前分布を使うことが出来ます．
+</p>
+
+<p>
+実際の問題にAmisを用いるときの，典型的な手順は次のようになります．
+<ul>
+  <li>データを訓練データ，開発用データ，テストデータに分ける
+  <li>設計したモデル，素性セットに基づいて，
+      訓練データからAmis用のデータを作るプログラムを書き，
+      example.model，example.event（必要に応じてexample.fixmapも）を作る．
+  <li>使用するパラメタ推定アルゴリズムなどを決め，設定ファイルexample.confを書く．
+      <p>
+      イベントファイルの形式にAmis形式を，
+      推定アルゴリズムにBFGSMAPを使う場合の典型的な設定は次のようになります．
+<pre>
+DATA_FORMAT     Amis
+FEATURE_TYPE    binary
+MODEL_FILE      example.model
+EVENT_FILE      example.event
+OUTPUT_FILE     example.output
+FIXMAP_FILE     example.fixmap    # DATA_FORMATがAmisFixの場合
+LOG_FILE        example.log
+ESTIMATION_ALGORITHM    BFGSMAP
+MAP_SIGMA	20
+NUM_ITERATIONS  1000
+PRECISION       6
+</pre>
+      </p>
+      <p>
+      DATA_FORMATは，適用する問題によって選びます（後述します）．
+
+      FEATURE_TYPEは，使う素性関数の値のタイプです．binaryにすると，素性が発火したか，しなかったか
+      だけが問題になり，素性関数に値を持たせることはできなくなります．
+     （同じイベントに同じ素性を複数書くことはできます）
+      binary，integer，realの順で，後のものほど一般性は高くなりますが，推定は遅くなる可能性があります．
+
+      MAP_SIGMAは，事前分布の標準偏差です．
+      一般的にどんな値が良いか議論するのは難しいですが，
+      開発データでの精度が最も良くなるようにするのが普通です．
+      通常は10から1000前後を中心に調べるのが良いようです．
+
+      NUM_ITERATIONSは，推定アルゴリズムの反復回数の上限です．この回数に達していなくても，
+      目的関数の値がPRECISIONの有効桁数で改善しなくなれば，反復を打ち切ります．
+      </p>
+  <li>
+<pre>
+% amis example.conf
+</pre>
+      としてamisを実行し，example.outputを得る．
+      <p>
+      使用するメモリ・反復一回あたりの計算時間は，(イベントファイルのサイズ+モデルファイルのサイズ)
+      のオーダーになります．
+      </p>
+  <li>example.outputから読み込んだパラメタの値を使って未知のデータを解析するプログラムを作る．
+      <p>
+      デフォルトではAmisは各素性に対して，上の式の<span class="math">a_i</span>を出力します．
+      </p>
+  <li>開発用データで性能を検証し，モデルや素性の設計をやり直す．
+</ul>
+
+</p>
+
+<h3>AmisFix形式を用いた学習</h3>
+文書分類のように，分類対象に，あらかじめ決まっているラベルを割り当てる問題には，
+AmisFix形式を使います．
+ここでは，与えられた単語の品詞を予測する問題を考えてみましょう．
+文章などに現れる一つ一つの単語をイベントと考え，
+それぞれの単語とその正しい品詞を，学習データとしてAmisに与えることにします．
+（問題を単純化するために，品詞はN[oun]，V[erb]，A[djective]の３つに限ります）
+訓練データとして，次のものを使うとしましょう．
+<pre>
+events -> N
+parameter -> N
+goes -> V
+killed -> V
+green -> A
+faster -> A
+</pre>
+ここで，例えば最初の行は，「単語eventsが観測され，その品詞はNであった」という意味です．
+このとき「単語の文字列」，「意味のありそうな語尾」，「長さが5以下かどうか」を判定するための素性を使って
+品詞を予測するなら，example.fixmapファイルは．大体次のようになるでしょう．
+<pre>
+N V A        # 分類に使うラベルを列挙
+events     N f_events_N     V f_events_V     A f_events_A
+parameter  N f_parameter_N  V f_parameter_V  A f_parameter_A
+goes       N f_goes_N       V f_goes_V       A f_goes_A
+killed     N f_killed_N     V f_killed_V     A f_killed_A
+green      N f_green_N      V f_green_V      A f_green_A      
+faster     N f_faster_N     V f_faster_V     A f_faster_A
+-s         N f_-s_N         V f_-s_V         A f_-s_A
+-ed        N f_-ed_N        V f_-ed_V        A f_-ed_A
+-er        N f_-er_N        V f_-er_V        A f_-er_A
+longer-5   N f_longer-5_N   V f_longer-5_V   A f_longer-5_A
+shorter-6  N f_shorter-6_N  V f_shorter-6_V  A f_shorter-6_A
+</pre>
+例えば，f_goes_Nという素性は，「goesがNとして現れた」というときに1に，
+それ以外のときに0になる素性，ということです．
+（この場合，素性名はラベル名と特徴名を組み合わせて作っているだけなので，example.fixmapの情報には
+ほとんど意味がありません．そうでない例を後で挙げます）
+
+これに基づいて，example.modelには，次のように，素性の名前（上ではf_...の形のもの）
+を全て列挙し，パラメタの初期値を書きます．初期値は通常1.0にしておけば問題ありません．
+<pre>
+f_events_N     1.0
+f_events_V     1.0
+f_events_A     1.0
+f_parameter_N  1.0
+f_parameter_V  1.0
+f_parameter_A  1.0
+f_goes_N       1.0
+f_goes_V       1.0
+f_goes_A       1.0
+...
+</pre>
+
+イベントファイルは次のようになります．
+<pre>
+N 1 events -s longer-5   # 特徴「events」「-s」「longer-5」を持つ単語がNだった
+N 1 parameter longer-5   # 特徴「parameter」「longer-5」を持つ単語がNだった
+V 1 goes -s shorter-6    # 以下同様
+V 1 killed -ed longer-5
+A 1 green shorter-6
+A 1 faster -er longer-5
+</pre>
+
+この状態で，
+<pre>
+% amis example.conf
+</pre>
+とすると，example.outputとして，次のものが得られます．
+<pre>
+f_events_N	4.179041e+00
+f_events_V	3.470270e-01
+...
+f_-s_A	2.631215e-01
+f_-ed_N	3.289747e-01
+f_-ed_V	5.920547e+00
+f_-ed_A	5.134234e-01
+...
+f_longer-5_A	6.951490e-01
+f_shorter-6_N	2.592765e-01
+f_shorter-6_V	1.482556e+00
+f_shorter-6_A	2.601511e+00
+</pre>
+
+これを使って，例えば，「died」の品詞を判定するには，
+「died」は特徴「-ed」と，「shorter-6」を持っているので，
+example.fixmapの素性の対応を見れば，
+<ul>
+  <li>Nになる場合の重みは， f_-ed_Nとf_shorter-6_Nの重みの積で，0.0853
+  <li>Vになる場合の重みは， f_-ed_Vとf_shorter-6_Vの重みの積で，8.78
+  <li>Aになる場合の重みは， f_-ed_Aとf_shorter-6_Aの重みの積で，1.34
+</ul>
+これを正規化すれば，
+p(N|died)=0.084，p(V|died)=0.86，p(A|died)=0.13となって，
+diedの品詞はVと予測できます．（この場合は，予測するだけなら，正規化の必要はありません）
+
+<p>
+上の例では，品詞が違うイベントでは，同じ素性は発火しないようになっていましたが，
+例えば特徴「-s」は，「Aではない」という予測には役立っても，NかVのどちらかを判別するのには
+あまり役に立たないかもしれません．
+このような状況を捉えるには，特徴「-s-NV」を追加し，fixmapに次のように記述することができます．
+<pre>
+-s-NV      N f_-s-NV_NorV   V f_-s-NV_NorV   A f_-s-NV_A
+</pre>
+N，V，どちらの場合も，同じ素性と対応づけられているのに注意してください．
+これに応じて，イベントファイルにも情報を追加することになります．
+
+</p>
+
+
+<h3>Amis形式を用いた学習</h3>
+問題によっては，一定数の選択肢から一つを選ぶような形の分類では扱えないこともあります．
+例えば，与えられた文の中から，主動詞を見付ける問題を考えてみましょう．
+この問題は，文中の各単語に対して，「主動詞か，そうでないか」を判定する分類器を適用しても
+解くことが出来ますが，「文中の単語の中から，主動詞を選ぶ」ような分類器が作れるなら，
+そのほうが自然であるようにも思えます．しかし，それでは選択肢の個数が文ごとに変わってしまうので，
+AmisFix形式で記述することはできません．
+
+このような場合には，イベントファイルをAmis形式で記述します．
+（なお，AmisFix形式のイベントファイルは，全てAmis形式で表現することもできます．）
+学習データとして次が与えられているとします．（[]で囲まれているのが主動詞）
+<pre>
+I [killed] a boy
+He [died]
+I [promised] to kill him
+His brother [killed] me
+</pre>
+
+素性として，「その単語の品詞」，「直前の単語の品詞」，「自分より前に動詞があるかどうか」
+を使うとすると（単語の品詞は与えられているとします），モデルファイル，イベントファイルはだいたい次のようになるでしょう．
+
+<pre>
+POS-DT         1.0  # 冠詞
+POS-N          1.0  # 名詞
+POS-PN         1.0  # 代名詞
+POS-P          1.0  # 前置詞
+POS-V          1.0  # 動詞
+Prev-DT        1.0
+Prev-N         1.0
+Prev-None      1.0  # 先頭の単語の場合
+Prev-PN        1.0
+Prev-P         1.0
+Prev-V         1.0
+Prev_Verb-NO   1.0  # 前に動詞があるかどうか
+Prev_Verb-YES  1.0
+</pre>
+
+<pre>
+event1
+0 POS-PN Prev-None Prev_Verb-NO  # I
+1 POS-V Prev-PN Prev_Verb-NO     # killed
+0 POS-DT Prev-V Prev_Verb-YES    # a
+0 POS-N Prev-DT Prev_Verb-YES    # boy
+
+event2
+0 POS-PN Prev-None Prev_Verb-NO  # He
+1 POS-V Prev-PN Prev_Verb-NO     # died
+
+event3
+0 POS-PN Prev-None Prev_Verb-NO  # I
+1 POS-V Prev-PN Prev_Verb-NO     # promised
+0 POS-P Prev-V Prev_Verb-YES     # to
+0 POS-V Prev-P Prev_Verb-YES     # kill
+0 POS-PN Prev-V Prev_Verb-YES    # him
+
+event4
+0 POS-PN Prev-None Prev_Verb-NO  # His
+0 POS-N Prev-PN Prev_Verb-NO     # brother
+1 POS-V Prev-N Prev_Verb-NO      # killed
+0 POS-PN Prev-V Prev_Verb-YES    # me
+</pre>
+
+AmisFixの場合と同様，
+<pre>
+% amis example.conf
+</pre>
+とすれば，example.outputが得られます．
+実際の問題に適用する方法も，AmisFixのときとほとんど同じです．
+
+
+<h3>AmisTree形式を用いた学習</h3>
+<p>
+最大エントロピー法によって，CFGの構文解析結果の曖昧性解消を行うことを考えてみましょう．
+構文解析の曖昧性解消は，可能な全ての構文木から，正しい構文木を選びとる問題なので，
+Amis形式のイベントファイルを使って学習できるはずです．
+</p>
+<p>
+例えば，あるCFGが与えられており，「time flies like an arrow」に，次の４つの解析があって，
+１つ目が正解である，という状況になっているとしましょう．
+<ul>
+  <li>(S (N time) (VP (V flies) (PP (P like) (NP (D an) (N arrow)))))
+  <li>(S (NP (N time) (N flies)) (VP (V like) (NP (D an) (N arrow))))
+  <li>(S (S (V time) (N flies)) (PP (P like) (NP (D an) (N arrow))))
+  <li>(S (V time) (NP (N flies) (PP (P like) (NP (D an) (N arrow)))))
+</ul>
+</p>
+
+<p>
+PCFGでは，「(A (B ...) (C ...))」という形の部分木に対して
+<span class="math">P(BC|A)</span>の形のスコアを与えますが，
+ここではこのような部分木に対しては，「f-A-B_C」という名前の素性を対応させることにします．
+さらに，スムージングのために，親ノードのシンボルの素性「f-A」も加えることにしましょう．
+すると，上の状況は，Amis形式では次のようなイベントになるでしょう．
+<pre>
+event1
+0 f-S f-S-NP_VP f-NP f-NP-N_N f-N f-N_time f-N f-N_flies f-VP f-VP-V_NP f-V f-V_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+0 f-S f-S-S_PP f-S f-S-V_N f-V f-V_time f-N f-N_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+0 f-S f-S-V_NP f-V f-V_time f-NP f-NP-N_PP f-N f-N_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+1 f-S f-S-N_VP f-N f-N_time f-VP f-VP-V_PP f-V f-V_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow
+</pre>
+</p>
+<p>
+この場合は解析結果が４通りしかないので，このようにAmis形式でイベントを記述しても問題ありませんが，
+実用的な構文解析器の学習をしたい場合には，CFGの曖昧性は大きくなり，
+また学習データとしてももっと長く曖昧性の大きい文を使う必要があると思われます．
+そのような状況では，Amis形式でイベントを書くと，
+観測/補完事象の数は各文の可能な解析の数になってしまうので，
+イベントファイルは巨大になり，パラメタ推定の計算コストも大きくなってしまいます．
+</p>
+<p>
+そこで，上のイベントをよく見ると，
+例えば「f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 」のように，
+複数の解析で共通に現れる素性の集合があるのが分かります．
+このように，観測/補完事象の中に共通する部分がある場合は，AmisTree形式のイベントファイルを使うと，
+イベントファイルのサイズや，パラメタ推定の計算コストを大幅に減らすことができる場合があります．
+上のAmis形式のイベントは，次のAmisTree形式のイベントと同等になります．
+<pre>
+event1
+1 f-S f-S-N_VP f-N f-N_time f-VP f-VP-V_PP f-V f-V_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+{ _ ( _ f-S { _ ( _ f-S-NP_VP { _ ( _ f-NP { _ ( _ f-NP-N_N { d_4 ( _ f-N { _ ( _ f-N_time ) } ) } { d_6 ( _ f-N { _ ( _ f-N_flies ) } ) } ) } ) } { _ ( _ f-VP { _ ( _ f-VP-V_NP { _ ( _ f-V { _ ( _ f-V_like ) } ) } { d_12 ( _ f-NP { _ ( _ f-NP-D_N { _ ( _ f-D { _ ( _ f-D_an ) } ) } { _ ( _ f-N { _ ( _ f-N_arrow ) } ) } ) } ) } ) } ) } ) ( _ f-S-S_PP { _ ( _ f-S { _ ( _ f-S-V_N { d_20 ( _ f-V { _ ( _ f-V_time ) } ) } $d_6 ) } ) } { d_24 ( _ f-PP { _ ( _ f-PP-P_NP { _ ( _ f-P { _ ( _ f-P_like ) } ) } $d_12 ) } ) } ) ( _ f-S-V_NP $d_20 { _ ( _ f-NP { _ ( _ f-NP-N_PP $d_6 $d_24 ) } ) } ) ( _ f-S-N_VP $d_4 { _ ( _ f-VP { _ ( _ f-VP-V_PP { _ ( _ f-V { _ ( _ f-V_flies ) } ) } $d_24 ) } ) } ) } ) }
+</pre>
+この問題の場合は，CKY法などの，動的計画法を用いた構文解析の結果作られる
+チャートをそのままAmisTree形式のイベントに変換することができます．
+</p>
+<p>
+ただし，構文木の中でより広い範囲にまたがる情報を扱うような素性，
+例えば主辞の情報を含む素性などを使おうとすると，
+各解析の間の共通性は失われていくので，feature forestのサイズも大きくなっていきます．
+AmisTree形式のイベントでは，イベントのサイズと，使う素性の局所性との間に，
+トレードオフがあるということができます．
+</p>
+
+</html>
+

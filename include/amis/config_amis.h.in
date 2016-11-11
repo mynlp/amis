@@ -1,0 +1,148 @@
+/* include/amis/config_amis.h.in.  Generated from configure.in by autoheader.  */
+
+/* Enabling bzlib functions */
+#undef AMIS_BZLIB
+
+/* Degree of debugging messages */
+#undef AMIS_DEBUG_LEVEL
+
+/* Name of package */
+#undef AMIS_PACKAGE
+
+/* Enabling parallel processing */
+#undef AMIS_PARALLEL
+
+/* Degree of profiling level */
+#undef AMIS_PROFILE_LEVEL
+
+/* Enabling Solaris threads */
+#undef AMIS_SOLARIS_THREAD
+
+/* Use long double as Real */
+#undef AMIS_USE_LONG_DOUBLE
+
+/* Version number of package */
+#undef AMIS_VERSION
+
+/* enable warning of zero empirical count */
+#undef AMIS_WARN_ZERO_EMPIRICAL_COUNT
+
+/* Enabling zlib functions */
+#undef AMIS_ZLIB
+
+/* Define to 1 if you have the <bzlib.h> header file. */
+#undef HAVE_BZLIB_H
+
+/* Define to 1 if you have the <ext/hash_map> header file. */
+#undef HAVE_EXT_HASH_MAP
+
+/* Define to 1 if you have the <ext/pool_allocator.h> header file. */
+#undef HAVE_EXT_POOL_ALLOCATOR_H
+
+/* Define to 1 if you have the `getrusage' function. */
+#undef HAVE_GETRUSAGE
+
+/* Define to 1 if you have the `gettimeofday' function. */
+#undef HAVE_GETTIMEOFDAY
+
+/* Define to 1 if you have the <hash_map> header file. */
+#undef HAVE_HASH_MAP
+
+/* Define to 1 if you have the <ieeefp.h> header file. */
+#undef HAVE_IEEEFP_H
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `bz2' library (-lbz2). */
+#undef HAVE_LIBBZ2
+
+/* Define to 1 if you have the `pthread' library (-lpthread). */
+#undef HAVE_LIBPTHREAD
+
+/* Define to 1 if you have the `thread' library (-lthread). */
+#undef HAVE_LIBTHREAD
+
+/* Define to 1 if you have the `z' library (-lz). */
+#undef HAVE_LIBZ
+
+/* Define to 1 if you have the <limits> header file. */
+#undef HAVE_LIMITS
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <pthread.h> header file. */
+#undef HAVE_PTHREAD_H
+
+/* Define to 1 if you have the <sstream> header file. */
+#undef HAVE_SSTREAM
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/resource.h> header file. */
+#undef HAVE_SYS_RESOURCE_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <thread.h> header file. */
+#undef HAVE_THREAD_H
+
+/* Define to 1 if you have the <tr1/unordered_map> header file. */
+#undef HAVE_TR1_UNORDERED_MAP
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <windows.h> header file. */
+#undef HAVE_WINDOWS_H
+
+/* Define to 1 if you have the <zlib.h> header file. */
+#undef HAVE_ZLIB_H
+
+/* disable assertion */
+#undef NDEBUG
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+#undef TIME_WITH_SYS_TIME
+
+/* Define to `unsigned int' if <sys/types.h> does not define. */
+#undef size_t

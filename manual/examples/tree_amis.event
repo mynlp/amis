@@ -1,0 +1,5 @@
+event1
+0 f-S f-S-NP_VP f-NP f-NP-N_N f-N f-N_time f-N f-N_flies f-VP f-VP-V_NP f-V f-V_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+0 f-S f-S-S_PP f-S f-S-V_N f-V f-V_time f-N f-N_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+0 f-S f-S-V_NP f-V f-V_time f-NP f-NP-N_PP f-N f-N_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
+1 f-S f-S-N_VP f-N f-N_time f-VP f-VP-V_PP f-V f-V_flies f-PP f-PP-P_NP f-P f-P_like f-NP f-NP-D_N f-D f-D_an f-N f-N_arrow 
