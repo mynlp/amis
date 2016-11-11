@@ -25,9 +25,12 @@ CHEADERS = \
            BatchEstimator.h \
            EstimatorLauncher.h \
            Event.h \
+           EventBase.h \
            EventCRF.h \
            EventFix.h \
            EventFormat.h \
+	   EventReader.h \
+	   EventReaderInst.h \
            EventReaderLauncher.h \
            EventReaderLauncherItem.h \
            EventSpace.h \
@@ -74,6 +77,8 @@ CHEADERS = \
 \
            OWBFGSBC.h \
            OWBFGSBCMAP.h \
+	   OWBFGSBCLauncherItem.h \
+	   OWBFGSBCMAPLauncherItem.h \
 \
            BFGS.h \
            BFGSLauncherItem.h \
